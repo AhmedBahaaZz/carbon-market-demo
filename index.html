@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carbon Pathway Selector</title>
+<style>
+  body {
+    font-family: "Poppins", sans-serif;
+    background: radial-gradient(circle at top, #012e2a, #011512);
+    color: #fff;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  .container {
+    text-align: center;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid #32e07d;
+    border-radius: 15px;
+    padding: 2rem 3rem;
+    width: 420px;
+    box-shadow: 0 0 25px rgba(50, 224, 125, 0.2);
+  }
+  h1 {
+    color: #32e07d;
+    margin-bottom: 1rem;
+  }
+  input[type="range"] {
+    width: 100%;
+    margin: 1rem 0;
+    accent-color: #32e07d;
+  }
+  #emissionValue {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+  #result {
+    margin-top: 1rem;
+    font-size: 1.1rem;
+  }
+  .status-box {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid #32e07d;
+    display: none;
+    animation: fadeIn 0.6s ease;
+  }
+  .scan {
+    width: 100%;
+    height: 6px;
+    background: linear-gradient(90deg, #32e07d, #0aff9d, #32e07d);
+    background-size: 200% 100%;
+    animation: scanning 2s linear infinite;
+    border-radius: 5px;
+    margin: 1rem 0;
+  }
+  @keyframes scanning {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  #nextBtn {
+    display: none;
+    margin-top: 1.5rem;
+    background: #32e07d;
+    color: #011512;
+    border: none;
+    padding: 0.7rem 1.3rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  #nextBtn:hover { background: #4ef9a8; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🌿 Carbon Pathway Selection</h1>
+  <p>Adjust your emission level to simulate your environmental impact:</p>
+
+  <input type="range" id="emissionRange" min="0" max="1000" value="500" />
+  <div id="emissionValue">Current Emissions: 500 tons CO₂</div>
+
+  <button id="analyzeBtn" style="background:#32e07d;color:#011512;border:none;padding:0.6rem 1.2rem;border-radius:20px;font-weight:600;cursor:pointer;">Analyze Pathway</button>
+
+  <div id="status" class="status-box">
+    <div class="scan"></div>
+    <div id="resultText"></div>
+  </div>
+
+  <button id="nextBtn">Next → Trade Page</button>
+</div>
+
+<script>
+  const range = document.getElementById("emissionRange");
+  const emissionValue = document.getElementById("emissionValue");
+  const analyzeBtn = document.getElementById("analyzeBtn");
+  const status = document.getElementById("status");
+  const resultText = document.getElementById("resultText");
+  const nextBtn = document.getElementById("nextBtn");
+
+  range.addEventListener("input", () => {
+    emissionValue.textContent = `Current Emissions: ${range.value} tons CO₂`;
+  });
+
+  analyzeBtn.addEventListener("click", () => {
+    status.style.display = "block";
+    resultText.innerHTML = "🔍 Scanning emission data...";
+    nextBtn.style.display = "none";
+
+    setTimeout(() => {
+      const emissions = parseInt(range.value);
+      let mode, credits;
+
+      if (emissions > 600) {
+        mode = "High Emission Mode ⚠️";
+        credits = Math.max(0, 1000 - emissions);
+        resultText.innerHTML = `
+          <strong style="color:#ffb347;">${mode}</strong><br>
+          You exceeded sustainable limits.<br>
+          You <b>need ${credits} credits</b> to balance your footprint.<br><br>
+          ✅ Data verified & approved.
+        `;
+      } else {
+        mode = "Low Emission Mode 🌱";
+        credits = 600 - emissions;
+        resultText.innerHTML = `
+          <strong style="color:#32e07d;">${mode}</strong><br>
+          Great job! You are eco-efficient.<br>
+          You <b>earned ${credits} credits</b> for trading.<br><br>
+          ✅ Data verified & approved.
+        `;
+      }
+
+      nextBtn.style.display = "inline-block";
+    }, 2000);
+  });
+
+  nextBtn.addEventListener("click", () => {
+    alert("Next Page → Trade Simulation (Page 2)");
+    localStorage.setItem("emissionValue", range.value);
+window.location.href = "trade.html";
+  });
+</script>
+
+</body>
+</html>

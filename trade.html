@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carbon Credit Market Simulation</title>
+<style>
+  body {
+    font-family: "Poppins", sans-serif;
+    background: radial-gradient(circle at top, #071c18, #010a08);
+    color: #fff;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  .dashboard {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid #32e07d;
+    border-radius: 20px;
+    width: 950px;
+    padding: 2rem;
+    box-shadow: 0 0 30px rgba(50, 224, 125, 0.3);
+  }
+  h1 {
+    text-align: center;
+    color: #32e07d;
+    margin-bottom: 1rem;
+  }
+  .trade-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+  .card {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid #32e07d;
+    border-radius: 15px;
+    padding: 1.5rem;
+    flex: 1;
+    text-align: center;
+  }
+  .card h2 {
+    color: #4ef9a8;
+    margin-bottom: 0.8rem;
+  }
+  .recommend {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #ffd166;
+  }
+  button {
+    background: #32e07d;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 15px;
+    color: #011512;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 0.3rem;
+  }
+  button:hover { background: #4ef9a8; }
+  .offer {
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    margin: 0.5rem 0;
+    padding: 0.7rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .offer span {
+    flex: 1;
+    text-align: left;
+  }
+  .tax-container {
+    margin-top: 2rem;
+  }
+  .tax-bar-bg {
+    background: rgba(255,255,255,0.1);
+    height: 25px;
+    border-radius: 15px;
+    overflow: hidden;
+  }
+  .tax-bar-fill {
+    height: 25px;
+    width: 0%;
+    border-radius: 15px;
+    transition: width 0.8s ease, background 0.8s ease;
+  }
+  #statusText {
+    margin-top: 0.8rem;
+    font-weight: 500;
+    text-align: center;
+  }
+  #creditsDisplay {
+    text-align: center;
+    font-size: 1.2rem;
+    margin-top: 1rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="dashboard">
+  <h1>💱 Carbon Credit Market</h1>
+  <div id="info"></div>
+  <div id="creditsDisplay"></div>
+
+  <div class="trade-section">
+    <div class="card">
+      <h2>Buy Credits</h2>
+      <div id="buyRecommend" class="recommend"></div>
+      <div id="buyOffers"></div>
+    </div>
+
+    <div class="card">
+      <h2>Sell Credits</h2>
+      <div id="sellRecommend" class="recommend"></div>
+      <div id="sellOffers"></div>
+    </div>
+  </div>
+
+  <div class="tax-container">
+    <h3>Tax Scale (based on Emissions)</h3>
+    <div class="tax-bar-bg">
+      <div id="taxBar" class="tax-bar-fill"></div>
+    </div>
+    <div id="statusText"></div>
+  </div>
+</div>
+
+<script>
+  // قيم أولية من الصفحة الأولى
+  let emissions = parseInt(localStorage.getItem("emissionValue")) || 500;
+  let credits = emissions > 600 ? Math.max(0, 1000 - emissions) : 600 - emissions;
+
+  const infoDiv = document.getElementById("info");
+  const creditsDisplay = document.getElementById("creditsDisplay");
+  const taxBar = document.getElementById("taxBar");
+  const statusText = document.getElementById("statusText");
+  const buyRec = document.getElementById("buyRecommend");
+  const sellRec = document.getElementById("sellRecommend");
+  const buyOffers = document.getElementById("buyOffers");
+  const sellOffers = document.getElementById("sellOffers");
+
+  const companiesBuy = [
+    { name: "EcoFuture Ltd", offer: 50, price: 12 },
+    { name: "GreenPath Corp", offer: 100, price: 10 },
+    { name: "BlueEarth Energy", offer: 150, price: 8 }
+  ];
+
+  const companiesSell = [
+    { name: "CarbonNet", demand: 50, price: 11 },
+    { name: "SteelCore Ltd", demand: 100, price: 9 },
+    { name: "MegaPower Industries", demand: 150, price: 7 }
+  ];
+
+  function updateDashboard() {
+    infoDiv.innerHTML = `<p>📊 Your Emissions: <strong>${emissions} tons CO₂</strong></p>`;
+    creditsDisplay.innerHTML = `💰 Current Credits: <strong>${credits}</strong>`;
+
+    // تحديث الضرائب حسب الانبعاثات
+    const taxPercent = Math.min(100, (emissions / 1000) * 100);
+    let color;
+    if (taxPercent > 70) {
+      color = "red";
+      statusText.innerHTML = "⚠️ High emissions → High taxes applied!";
+    } else if (taxPercent > 40) {
+      color = "orange";
+      statusText.innerHTML = "⚠️ Moderate emissions → Some taxes apply.";
+    } else {
+      color = "limegreen";
+      statusText.innerHTML = "🌱 Low emissions → Minimal tax, credit bonus!";
+    }
+    taxBar.style.width = taxPercent + "%";
+    taxBar.style.background = color;
+
+    // توصية شراء أو بيع
+    if (credits > 150) {
+      sellRec.textContent = "✅ Recommended: Sell excess credits";
+      buyRec.textContent = "";
+    } else if (credits < 50) {
+      buyRec.textContent = "💡 Recommended: Buy more credits";
+      sellRec.textContent = "";
+    } else {
+      buyRec.textContent = "";
+      sellRec.textContent = "";
+    }
+
+    // عروض الشركات
+    buyOffers.innerHTML = "";
+    sellOffers.innerHTML = "";
+
+    companiesBuy.forEach(c => {
+      const div = document.createElement("div");
+      div.className = "offer";
+      div.innerHTML = `<span>${c.name} – ${c.offer} credits @ $${c.price} each</span>`;
+      const btn = document.createElement("button");
+      btn.textContent = "Buy";
+      btn.onclick = () => {
+        credits += c.offer;
+        emissions -= c.offer / 2;
+        updateDashboard();
+      };
+      div.appendChild(btn);
+      buyOffers.appendChild(div);
+    });
+
+    companiesSell.forEach(c => {
+      const div = document.createElement("div");
+      div.className = "offer";
+      div.innerHTML = `<span>${c.name} – buying ${c.demand} credits @ $${c.price} each</span>`;
+      const btn = document.createElement("button");
+      btn.textContent = "Sell";
+      btn.onclick = () => {
+        if (credits >= c.demand) {
+          credits -= c.demand;
+          emissions += c.demand / 2;
+          updateDashboard();
+        } else {
+          alert("❌ Not enough credits to sell!");
+        }
+      };
+      div.appendChild(btn);
+      sellOffers.appendChild(div);
+    });
+  }
+
+  updateDashboard();
+</script>
+
+</body>
+</html>
